@@ -1,0 +1,14 @@
+<html>
+    <head>
+        <meta charset="utf8" />
+        <title>Form to send a json file</title>
+    </head>
+    <body>
+        <form method="post" action="/jsonFilePost" enctype="multipart/form-data">
+            Collection: <input type="text" name="collection" placeholder="Collection" /><br><br>
+            Choose json file that contains the objects that will be created!<br>
+            <input type="file" name="jsonFile" /><br><br>
+            <input type="submit" value="Cadastrar"/>
+        </form>
+    </body>
+</html>
