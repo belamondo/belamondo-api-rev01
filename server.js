@@ -68,10 +68,14 @@ app.get('/', (req, res) => {
             }
 
             _crud._read(params)
-            .then(r => {
-                globalRes = r;
-                resolve(globalRes);
-            })
+						.then(grep => {
+							let stringToConcat = '';
+							
+							grep.stdout.on('data', data => {
+								let concat = stringToConcat += data.toString();
+								res.write(concat.replace(/--/g, ','));
+							})
+						})
         } else if(object.crudAction === "set"){
             if(!object.collection){
                 console.log("You need to set a collection.");

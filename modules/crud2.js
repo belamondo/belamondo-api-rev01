@@ -37,30 +37,8 @@ _read = (params) => new Promise((resolve, reject) => {
 	if(params.query){
 		for(let lim = params.query.length, i =0; i < lim; i++) {
 			let stringToGrep = '"' + params.query[i][0] + '":*.*' + params.query[i][1],
-			grep = spawn("grep", ["-inr", stringToGrep, "/home/cabox/workspace/belamondo-api/collections/" + params.collection + "/"]);
-
-			grep.stdout.on('data', data => {
-				let array = data.toString().split('",');
-				let arrayOfObjects = [];
-				
-				for(let lim = array.length, i = 0; i < lim; i++){
-					let file1 = array[i].split(':');
-					let file2 = file1[0].split('/');
-					let file3 = file2[file2.length - 1];
-					
-					fs.readFile("/home/cabox/workspace/belamondo-api/collections/" + params.collection + "/" + file3, "utf8", (err, fileData) => {
-						console.log(file3);
-						let string = JSON.stringify(fileData);
-						//let json = JSON.parse(string);
-						//console.log(json);
-						//arrayOfObjects.push(json);
-					})
-					break;
-				}
-				
-				resolve(arrayOfObjects);
-			})
-
+			grep = spawn("grep", ["-irhC 10", stringToGrep, "/home/cabox/workspace/belamondo-api/collections/" + params.collection + "/"]);
+			
 			grep.stderr.on('data', data => {
 				console.log(`stderr: ${data}`);
 			})
@@ -68,6 +46,8 @@ _read = (params) => new Promise((resolve, reject) => {
 			grep.on('close', code => {
 				console.log(`Closed with code ${code}`);
 			})
+			
+			resolve(grep);
 		}
 	} else {
 		resolve(stringToResolve); 
