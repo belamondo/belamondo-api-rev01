@@ -68,13 +68,9 @@ app.get('/', (req, res) => {
             }
 
             _crud._read(params)
-						.then(grep => {
-							let stringToConcat = '';
-							
-							grep.stdout.on('data', data => {
-								let concat = stringToConcat += data.toString();
-								res.write(concat.replace(/--/g, ','));
-							})
+						.then(res => {
+							globalRes = res;
+							resolve(res);
 						})
         } else if(object.crudAction === "set"){
             if(!object.collection){
@@ -144,9 +140,12 @@ app.get('/', (req, res) => {
         }
     })
     .then(response => {
-        //console.log(response);
-        let string = JSON.stringify(response);
-        res.end(string);
+			let array = []
+			for(let lim = response.length, i = 0; i < lim; i++){
+				let json = JSON.parse(response[i]);
+				array.push(json);
+			}
+			res.json(array);
     })
 })
 

@@ -39,15 +39,23 @@ _read = (params) => new Promise((resolve, reject) => {
 			let stringToGrep = '"' + params.query[i][0] + '":*.*' + params.query[i][1],
 			grep = spawn("grep", ["-irhC 10", stringToGrep, "/home/cabox/workspace/belamondo-api/collections/" + params.collection + "/"]);
 			
+			let stringToConcat = '';
+			let concat = '';
+
+			grep.stdout.on('data', data => {
+				concat = stringToConcat += data.toString();
+			})
+			
 			grep.stderr.on('data', data => {
 				console.log(`stderr: ${data}`);
 			})
 
 			grep.on('close', code => {
 				console.log(`Closed with code ${code}`);
+				let array = [];
+				array = concat.split('--');
+				resolve(array);
 			})
-			
-			resolve(grep);
 		}
 	} else {
 		resolve(stringToResolve); 
