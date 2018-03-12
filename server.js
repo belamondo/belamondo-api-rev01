@@ -195,6 +195,30 @@ app.post('/jsonFilePost', (request, res) => {
     })
 })
 
+app.post('/crud', (request, response) => {
+	let globalRes = "teste";
+	new Promise((resolve, reject) => {
+		let params = {
+			collection: request.body.collection,
+			query: [[ request.body.field, request.body.value ]]
+		}
+
+		_crud._read(params)
+		.then(res => {
+			globalRes = res;
+			resolve(res);
+		})
+	})
+	.then(resp => {
+		let array = []
+		for(let lim = resp.length, i = 0; i < lim; i++){
+			let json = JSON.parse(resp[i]);
+			array.push(json);
+		}
+		response.json(array);
+	})
+})
+
 app.listen(3000, () => {
     console.log('server started');
 })
