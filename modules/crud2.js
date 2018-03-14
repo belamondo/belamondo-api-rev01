@@ -2,34 +2,38 @@ const fs = require('fs');
 const { spawn } = require('child_process');
 
 _create = (params) => {
-    let ls = spawn("ls", ["./collections/" + params.collection]);
+    return new Promise((resolve, reject) => {
+        let ls = spawn("ls", ["./collections/" + params.collection]);
 
-    ls.stdout.on('data', (data) => {
-        let treatObjectToPrintf = JSON.stringify(params.objectToCollection);
-        let stringToPrintf = treatObjectToPrintf.replace('","', '",\n"');
-        let idFileName = new Date().getTime();
-        
-        fs.writeFileSync(__dirname + "/../collections/" + params.collection + "/" + idFileName, stringToPrintf);
-
-        // console.log(data.length)
-        // for(let lim = data, i = 0; i < lim; i++) {
-        //   console.log(data[i])  
-        // }
-    });
-    
-    ls.stderr.on('data', (data) => {
-        let mkdir = spawn("mkdir", ["./collections/" + params.collection]);
-
-        let treatObjectToPrintf = JSON.stringify(params.objectToCollection);
-        let stringToPrintf = treatObjectToPrintf.replace('","', '",\n"');
-        let idFileName = new Date().getTime();
-        
-        fs.writeFileSync(__dirname + "/../collections/" + params.collection + "/" + idFileName, stringToPrintf);
-    });
+        ls.stdout.on('data', (data) => {
+            let treatObjectToPrintf = JSON.stringify(params.objectToCollection);
+            let stringToPrintf = treatObjectToPrintf.replace('","', '",\n"');
+            let idFileName = new Date().getTime();
             
-    ls.on('close', (code) => {
-        console.log(`child process exited with code ${code}`);
-    });
+            fs.writeFileSync(__dirname + "/../collections/" + params.collection + "/" + idFileName, stringToPrintf);
+
+            resolve("Criado com sucesso")
+            // console.log(data.length)
+            // for(let lim = data, i = 0; i < lim; i++) {
+            //   console.log(data[i])  
+            // }
+        });
+        
+        ls.stderr.on('data', (data) => {
+            let mkdir = spawn("mkdir", ["./collections/" + params.collection]);
+
+            let treatObjectToPrintf = JSON.stringify(params.objectToCollection);
+            let stringToPrintf = treatObjectToPrintf.replace('","', '",\n"');
+            let idFileName = new Date().getTime();
+            fs.writeFileSync(__dirname + "/../collections/" + params.collection + "/" + idFileName, stringToPrintf);
+
+            resolve("Criado com sucesso")
+        });
+                
+        ls.on('close', (code) => {
+            console.log(`child process exited with code ${code}`);
+        });
+    })
 }
 
 _read = (params) => new Promise((resolve, reject) => {
@@ -37,7 +41,7 @@ _read = (params) => new Promise((resolve, reject) => {
 	if(params.query){
 		for(let lim = params.query.length, i =0; i < lim; i++) {
 			let stringToGrep = '"' + params.query[i][0] + '":*.*' + params.query[i][1],
-			grep = spawn("grep", ["-irhC 10", stringToGrep, "/home/cabox/workspace/belamondo-api/collections/" + params.collection + "/"]);
+			grep = spawn("grep", ["-irhC 10", stringToGrep, __dirname + "/../collections/" + params.collection + "/"]);
 			
 			let stringToConcat = '';
 			let concat = '';
