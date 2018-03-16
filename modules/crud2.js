@@ -38,16 +38,72 @@ _create = (params) => {
 
 _read = (params) => new Promise((resolve, reject) => {
 	let stringToResolve = "";
-	if(params.query){
+
+	if(params.queryByFilename){
+		let array = []
+		
+		for(let lim = params.queryByFilename.length, i = 0; i < lim; i++){
+			
+			let find = spawn("find", [__dirname + "/../collections/" + params.collection + "/", "-name", params.queryByFilename[i]]);
+			
+			find.stdout.on('data', data => {
+				let cat = spawn("cat", [__dirname + "/../collections/" + params.collection + "/" + params.queryByFilename[i]]);
+				
+				cat.stdout.on('data', d => {
+					array.push(d.toString())
+				});
+											
+				cat.stderr.on('data', d => {
+					console.log(`stderr: ${d}`);
+				});
+
+				cat.on('close', cod => {
+					if(i === (params.queryByFilename.length - 1)){
+						console.log(`Closed with code ${cod}`);
+						resolve(array);
+					}
+				});
+			})
+			
+			find.stderr.on('data', data => {
+				console.log(`stderr: ${data}`);
+			})
+
+			find.on('close', code => {
+				if(i === (params.queryByFilename.length - 1)){
+					console.log(`Closed with code ${code}`);
+				}
+			})
+		}												 
+	} else if(params.query){
 		for(let lim = params.query.length, i =0; i < lim; i++) {
 			let stringToGrep = '"' + params.query[i][0] + '":*.*' + params.query[i][1],
-			grep = spawn("grep", ["-irhC 10", stringToGrep, __dirname + "/../collections/" + params.collection + "/"]);
+			grep = spawn("grep", ["-irHl", stringToGrep, __dirname + "/../collections/" + params.collection + "/"]);
 			
-			let stringToConcat = '';
-			let concat = '';
+			let array = []
 
 			grep.stdout.on('data', data => {
-				concat = stringToConcat += data.toString();
+				
+				let filenameLine = data.toString().split('\n');
+				for(let lim = filenameLine.length, j = 0; j < lim; j++){
+					let filename = filenameLine[j].split('/');
+					let cat = spawn("cat", [__dirname + "/../collections/" + params.collection + "/" + filename[filename.length - 1]]);
+
+					cat.stdout.on('data', d => { 
+						array.push(d.toString())
+					});
+
+					cat.stderr.on('data', d => {
+						console.log(`stderr: ${d}`);
+					});
+
+					cat.on('close', cod => {
+						if(i === (params.query.length - 1) && j === (filenameLine.length - 1)){
+							console.log(`Closed with code ${cod}`);
+							resolve(array);
+						}
+					})
+				}
 			})
 			
 			grep.stderr.on('data', data => {
@@ -55,10 +111,14 @@ _read = (params) => new Promise((resolve, reject) => {
 			})
 
 			grep.on('close', code => {
-				console.log(`Closed with code ${code}`);
-				let array = [];
-				array = concat.split('--');
-				resolve(array);
+				if(i === (params.query.length - 1)){
+					console.log(`Closed with code ${code}`);
+				}
+				
+				if(code === 1){
+					array.push('{"message":"Nothing found!"}')
+					resolve(array);
+				}
 			})
 		}
 	} else {

@@ -2,7 +2,6 @@
  * Native modules
  */
 const fs = require('fs');
-const { spawn } = require('child_process');
 
 /**
  * Third party modules
@@ -52,14 +51,24 @@ app.get('/crud', (req, res) => {
         }
 
         let query;
-        if(!object.query){
+				let queryByFilename;
+        
+				if(!object.query){
             query = false;
         } else {
             query = object.query;
         }
+			
+				if(!object.queryByFilename){
+            queryByFilename = false;
+        } else {
+            queryByFilename = object.queryByFilename;
+        }
+			
         let params = {
             collection: object.collection,
-            query: query
+            query: query,
+						queryByFilename: queryByFilename
         }
 
         _crud._read(params)
@@ -68,7 +77,7 @@ app.get('/crud', (req, res) => {
             resolve(res);
         })
         .catch(err => {
-            console.log(err)
+            console.log("err:" + err)
         })
         
         // if(object.crudAction === "create"){
