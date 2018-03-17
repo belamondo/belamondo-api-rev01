@@ -81,29 +81,10 @@ _read = (params) => new Promise((resolve, reject) => {
 			grep = spawn("grep", ["-irHl", stringToGrep, __dirname + "/../collections/" + params.collection + "/"]);
 			
 			let array = []
+			let dataConcat = ''
 
 			grep.stdout.on('data', data => {
-				
-				let filenameLine = data.toString().split('\n');
-				for(let lim = filenameLine.length, j = 0; j < lim; j++){
-					let filename = filenameLine[j].split('/');
-					let cat = spawn("cat", [__dirname + "/../collections/" + params.collection + "/" + filename[filename.length - 1]]);
-
-					cat.stdout.on('data', d => { 
-						array.push(d.toString())
-					});
-
-					cat.stderr.on('data', d => {
-						console.log(`stderr: ${d}`);
-					});
-
-					cat.on('close', cod => {
-						if(i === (params.query.length - 1) && j === (filenameLine.length - 1)){
-							console.log(`Closed with code ${cod}`);
-							resolve(array);
-						}
-					})
-				}
+				dataConcat = dataConcat + '-' + data.toString()
 			})
 			
 			grep.stderr.on('data', data => {
@@ -111,6 +92,32 @@ _read = (params) => new Promise((resolve, reject) => {
 			})
 
 			grep.on('close', code => {
+				let filenameLine = dataConcat.toString().split("\n");
+
+				console.log(filenameLine.length)
+				for(let lim = filenameLine.length, j = 0; j < lim; j++){
+					let filename = filenameLine[j].split('/');
+
+					if(filename[filename.length - 1] !== ''){
+						let cat = spawn("cat", [__dirname + "/../collections/" + params.collection + "/" + filename[filename.length - 1]]);
+
+						cat.stdout.on('data', d => { 
+							array.push(d.toString())
+						});
+
+						cat.stderr.on('data', d => {
+							console.log(`[cat] stderr: ${d}`);
+						});
+
+						cat.on('close', cod => {
+							if(i === (params.query.length - 1) && j === (filenameLine.length - 2)){
+								console.log(`Closed with code ${cod}`);
+								resolve(array);
+							}
+						})
+					}
+				}
+				
 				if(i === (params.query.length - 1)){
 					console.log(`Closed with code ${code}`);
 				}
